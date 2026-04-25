@@ -1,0 +1,442 @@
+{
+  "info": {
+    "name": "LogiSecure API",
+    "description": "Colección de pruebas para la API de LogiSecure - Sistema de gestión logística",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "javascript",
+        "exec": [
+          "if (pm.response.code === 200 || pm.response.code === 201) {",
+          "    var jsonData = pm.response.json();",
+          "    if (jsonData.access_token) {",
+          "        pm.collectionVariables.set('token', jsonData.access_token);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Registrar Usuario",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gerente@logisecure.com\",\n  \"username\": \"gerente1\",\n  \"password\": \"password123\",\n  \"full_name\": \"Juan Pérez\",\n  \"role\": \"GERENTE\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar Sesión",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gerente@logisecure.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Usuario Actual",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Validar Código",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/validate-code",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Usuarios (Gerente)",
+      "item": [
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Usuario",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/users/",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chofer@logisecure.com\",\n  \"username\": \"chofer1\",\n  \"password\": \"password123\",\n  \"full_name\": \"Carlos García\",\n  \"role\": \"CHOFER\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/2",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/users/2",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Carlos García Actualizado\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Usuario",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/2",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Choferes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/drivers/list",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Rutas",
+      "item": [
+        {
+          "name": "Listar Todas las Rutas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Mis Rutas (Chofer)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/my-routes",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Ruta",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/routes/",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chofer_id\": 2,\n  \"origen\": \"Ciudad de México\",\n  \"destino\": \"Guadalajara\",\n  \"descripcion\": \"Entrega de mercancía\",\n  \"distancia_km\": 550.5\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Ruta por ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/1",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Ruta",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/routes/1",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_progreso\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Ruta",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/routes/1",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Estado de Ruta",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/routes/1/status?estado=completada",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Datos Sensibles (Gerente)",
+      "item": [
+        {
+          "name": "Datos Sensibles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/gerente/sensitive-data",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Estadísticas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/gerente/stats",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Códigos Activos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/gerente/codes",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "Generar Código Temporal",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/generate-code",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purpose\": \"Combustible extra en ruta\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Sistema",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Root",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

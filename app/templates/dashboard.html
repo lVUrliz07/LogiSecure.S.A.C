@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiSecure - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            background: var(--light-gray);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .top-bar {
+            background: var(--white);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-name {
+            color: var(--primary-blue);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .logout-btn {
+            background: var(--error);
+            color: var(--white);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+        
+        /* TABS */
+        .nav-tab {
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            color: var(--dark-gray);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-tab:hover {
+            background: var(--light-gray);
+            color: var(--primary-blue);
+        }
+        
+        .nav-tab.active-tab {
+            color: var(--turquoise);
+            background: var(--light-gray);
+            border-bottom-color: var(--turquoise);
+        }
+
+        .tab-content {
+            background: var(--white);
+            border-radius: 0 0 15px 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1);
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1);
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--turquoise);
+        }
+        
+        .card h3 {
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: var(--white);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--turquoise);
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+        
+        .data-item {
+            padding: 12px;
+            background: var(--light-gray);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--turquoise);
+        }
+        
+        .data-item strong {
+            color: var(--primary-blue);
+        }
+        
+        .sensitive-data {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .btn-small {
+            background: var(--turquoise);
+            color: var(--white);
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-small:hover {
+            background: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+        }
+        
+        .code-display {
+            background: var(--primary-blue);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 8px;
+            margin-top: 15px;
+            border: 2px solid var(--turquoise);
+        }
+        
+        .routes-table, .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .routes-table th, .users-table th,
+        .routes-table td, .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .routes-table th, .users-table th {
+            background: var(--light-blue);
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .routes-table tbody tr:hover,
+        .users-table tbody tr:hover {
+            background: var(--light-gray);
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pendiente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-en_progreso {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completada {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: var(--error);
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="top-bar">
+            <div class="user-info">
+                <h1 style="color: var(--primary-blue); margin: 0;">🚚 LogiSecure</h1>
+                <span class="role-badge" id="userRoleBadge">ROL</span>
+            </div>
+            <div>
+                <span class="user-name" id="userName"></span>
+                <button class="btn-small" onclick="window.location.href='/setup-2fa'">🔐 2FA</button>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <!-- Pestañas de Navegación -->
+        <div style="background: var(--white); padding: 0; border-radius: 15px 15px 0 0; box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1); margin-bottom: 0; display: flex; flex-wrap: wrap; border-bottom: 2px solid #e5e7eb;">
+            <button class="nav-tab active-tab" onclick="switchTab(event, 'rutas')">🛣️ Rutas</button>
+            <button class="nav-tab" id="usersTabBtn" onclick="switchTab(event, 'usuarios')" style="display: none;">👥 Usuarios</button>
+            <button class="nav-tab" id="codesTabBtn" onclick="switchTab(event, 'codigos')" style="display: none;">🔐 Códigos</button>
+            <button class="nav-tab" id="statsTabBtn" onclick="switchTab(event, 'estadisticas')" style="display: none;">📊 Estadísticas</button>
+            <button class="nav-tab" id="sensibleTabBtn" onclick="switchTab(event, 'sensibles')" style="display: none;">⚠️ Datos Sensibles</button>
+        </div>
+
+        <!-- TAB: RUTAS -->
+        <div id="tab-rutas" class="tab-content active">
+            <div class="cards-grid">
+                <div class="card" id="createRouteCar" style="display: none;">
+                    <h3>➕ Nueva Ruta</h3>
+                    <div id="choferWarning" style="color: #f59e0b; padding: 10px; background: #fef3c7; border-radius: 8px; margin-bottom: 15px; display: none;">
+                        <strong>⚠️ Primero debes crear choferes en la tab "Usuarios"</strong>
+                    </div>
+                    <form onsubmit="createRoute(event)">
+                        <div class="form-group">
+                            <label>Chofer *</label>
+                            <select id="choferSelect" required>
+                                <option value="">Cargando choferes...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Origen *</label>
+                            <input type="text" id="routeOrigen" placeholder="Ej: Ciudad de México" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Destino *</label>
+                            <input type="text" id="routeDestino" placeholder="Ej: Guadalajara" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <input type="text" id="routeDescripcion" placeholder="Entrega de mercancía">
+                        </div>
+                        <div class="form-group">
+                            <label>Distancia (km) *</label>
+                            <input type="number" id="routeDistancia" placeholder="550.5" step="0.1" required>
+                        </div>
+                        <div id="routeMessage" class="alert hidden"></div>
+                        <button type="submit" class="btn-small" style="width: 100%; background: var(--success);">Crear Ruta</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📋 Listado de Rutas</h3>
+                <div id="routesContent">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- TAB: USUARIOS -->
+        <div id="tab-usuarios" class="tab-content">
+            <div class="cards-grid">
+                <div class="card">
+                    <h3>➕ Nuevo Usuario</h3>
+                    <p style="color: #f59e0b; padding: 10px; background: #fef3c7; border-radius: 8px; margin-bottom: 15px;"><strong>🔒 Solo el GERENTE puede crear usuarios</strong></p>
+                    <form onsubmit="createUser(event)">
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="userEmail" placeholder="usuario@logisecure.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Usuario *</label>
+                            <input type="text" id="userUsername" placeholder="usuario123" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Completo *</label>
+                            <input type="text" id="userFullName" placeholder="Juan Pérez García" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña *</label>
+                            <input type="password" id="userPassword" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Rol *</label>
+                            <select id="userRole" required>
+                                <option value="">Seleccionar rol...</option>
+                                <option value="CHOFER">Chofer</option>
+                                <option value="DISPATCHER">Dispatcher</option>
+                                <option value="GERENTE">Gerente</option>
+                            </select>
+                        </div>
+                        <div id="userMessage" class="alert hidden"></div>
+                        <button type="submit" class="btn-small" style="width: 100%; background: var(--success);">Crear Usuario</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>👥 Listado de Usuarios</h3>
+                <div id="usersContent">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- TAB: CÓDIGOS TEMPORALES -->
+        <div id="tab-codigos" class="tab-content">
+            <div class="cards-grid">
+                <div class="card">
+                    <h3>🔑 Generar Código Temporal</h3>
+                    <form onsubmit="generateCode(event)">
+                        <div class="form-group">
+                            <label>Propósito *</label>
+                            <input type="text" id="codePurpose" placeholder="Ej: Combustible extra en ruta" required>
+                        </div>
+                        <div id="codeMessage" class="alert hidden"></div>
+                        <div id="codeDisplay" class="code-display hidden"></div>
+                        <button type="submit" class="btn-small" style="width: 100%; background: var(--success);">Generar Código</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📌 Códigos Activos</h3>
+                <div id="codesContent">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- TAB: ESTADÍSTICAS -->
+        <div id="tab-estadisticas" class="tab-content">
+            <div class="card">
+                <h3>📊 Estadísticas del Sistema</h3>
+                <div id="statsContent">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- TAB: DATOS SENSIBLES -->
+        <div id="tab-sensibles" class="tab-content">
+            <div class="card">
+                <h3>🔐 Datos Confidenciales</h3>
+                <button class="btn-small" onclick="loadSensitiveData()">Cargar Datos</button>
+                <div id="sensitiveContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token) {
+            window.location.href = '/login';
+        } else if (!user.is_totp_enabled) {
+            window.location.href = '/setup-2fa';
+        }
+        
+        document.getElementById('userName').textContent = user.full_name;
+        document.getElementById('userRoleBadge').textContent = user.role;
+        console.log("Debug - Usuario logueado:", user);
+
+        // Mostrar pestañas según el rol
+        const role = String(user.role || '').toUpperCase();
+        
+        if (role.includes('GERENTE')) {
+            document.getElementById('usersTabBtn').style.display = 'block';
+            document.getElementById('codesTabBtn').style.display = 'block';
+            document.getElementById('statsTabBtn').style.display = 'block';
+            document.getElementById('sensibleTabBtn').style.display = 'block';
+            document.getElementById('createRouteCar').style.display = 'block';
+        } else if (role.includes('DISPATCHER')) {
+            document.getElementById('statsTabBtn').style.display = 'block';
+            document.getElementById('createRouteCar').style.display = 'block';
+        }
+        
+        // Cargar datos iniciales
+        loadRoutes();
+        
+        const currentRole = String(user.role || '').toUpperCase();
+        if (currentRole.includes('GERENTE') || currentRole.includes('DISPATCHER')) {
+            loadChoferes();
+        }
+
+        // FUNCIONES DE NAVEGACIÓN
+        function switchTab(e, tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active-tab'));
+            
+            // Mostrar tab seleccionado
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            // Marcar botón activo (e.currentTarget es el botón, e.target podría ser el icono)
+            if (e && e.currentTarget) {
+                e.currentTarget.classList.add('active-tab');
+            } else if (e && e.target) {
+                // Fallback si no viene de un evento directo
+                e.target.closest('.nav-tab')?.classList.add('active-tab');
+            }
+            
+            // Cargar datos
+            if (tabName === 'usuarios') {
+                loadUsers();
+            } else if (tabName === 'codigos') {
+                loadCodes();
+            } else if (tabName === 'estadisticas') {
+                loadStats();
+            }
+        }
+        
+        let totalKmChofer = 0;
+
+        // RUTAS
+        async function loadRoutes() {
+            try {
+                const endpoint = user.role === 'CHOFER' ? '/routes/my-routes' : '/routes/';
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const routes = await response.json();
+                
+                if (!Array.isArray(routes) || routes.length === 0) {
+                    document.getElementById('routesContent').innerHTML = '<p style="text-align: center; color: #9ca3af;">No hay rutas disponibles</p>';
+                    return;
+                }
+                
+                const role = String(user.role || '').toUpperCase();
+                let html = `<table class="routes-table"><thead><tr><th>ID</th><th>Origen</th><th>Destino</th><th>Descripción</th><th>Estado</th><th>Distancia</th>${role.includes('CHOFER') || role.includes('GERENTE') || role.includes('DISPATCHER') ? '<th>Acciones</th>' : ''}</tr></thead><tbody>`;
+                totalKmChofer = 0;
+                routes.forEach(ruta => {
+                    let actionsHtml = '';
+                    if (role.includes('CHOFER')) {
+                        totalKmChofer += ruta.distancia_km || 0;
+                        if (ruta.estado === 'pendiente') {
+                            actionsHtml = `<td><button class="btn-small" onclick="updateRouteStatus(${ruta.id}, 'en_progreso')" style="padding: 5px 10px; font-size: 0.8rem;">▶️ Iniciar</button></td>`;
+                        } else if (ruta.estado === 'en_progreso') {
+                            actionsHtml = `<td><button class="btn-small" onclick="updateRouteStatus(${ruta.id}, 'completada')" style="padding: 5px 10px; font-size: 0.8rem; background: var(--success);">✅ Finalizar</button></td>`;
+                        }
+                    } else if (role.includes('GERENTE') || role.includes('DISPATCHER')) {
+                        actionsHtml = `<td><button class="btn-small" onclick="deleteRoute(${ruta.id})" style="padding: 5px 10px; font-size: 0.8rem; background: var(--error);">🗑️</button></td>`;
+                    }
+
+                    html += `<tr>
+                        <td>#${ruta.id}</td>
+                        <td>${ruta.origen}</td>
+                        <td>${ruta.destino}</td>
+                        <td>${ruta.descripcion || '-'}</td>
+                        <td><span class="status-badge status-${ruta.estado || 'pendiente'}">${ruta.estado || 'pendiente'}</span></td>
+                        <td>${ruta.distancia_km ? ruta.distancia_km + ' km' : '-'}</td>
+                        ${actionsHtml}
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                
+                if (user.role === 'CHOFER') {
+                    html = `<div class="card" style="margin-bottom: 20px; background: var(--primary-blue); color: white;">
+                                <h4 style="margin:0">📊 Mi Resumen: <span style="color: var(--turquoise)">${totalKmChofer.toFixed(1)} km</span> recorridos en total</h4>
+                            </div>` + html;
+                }
+                
+                document.getElementById('routesContent').innerHTML = html;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('routesContent').innerHTML = '<p style="color: var(--error);">Error al cargar rutas</p>';
+            }
+        }
+
+        async function loadChoferes() {
+            try {
+                const response = await fetch(`${API_URL}/users/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    console.log('No se pudieron cargar choferes:', response.status);
+                    const select = document.getElementById('choferSelect');
+                    select.innerHTML = '<option value="">⚠️ Error al cargar choferes</option>';
+                    document.getElementById('choferWarning').style.display = 'block';
+                    return;
+                }
+
+                const users = await response.json();
+                const choferes = users.filter(u => u.role === 'CHOFER');
+                
+                const select = document.getElementById('choferSelect');
+                select.innerHTML = '';
+                
+                if (choferes.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = '⚠️ No hay choferes disponibles';
+                    option.disabled = true;
+                    option.selected = true;
+                    select.appendChild(option);
+                    document.getElementById('choferWarning').style.display = 'block';
+                    select.disabled = true;
+                } else {
+                    const optionDefault = document.createElement('option');
+                    optionDefault.value = '';
+                    optionDefault.textContent = '📌 Seleccionar chofer...';
+                    select.appendChild(optionDefault);
+                    
+                    choferes.forEach(chofer => {
+                        const option = document.createElement('option');
+                        option.value = chofer.id;
+                        option.textContent = `👨‍✈️ ${chofer.full_name} (${chofer.email})`;
+                        select.appendChild(option);
+                    });
+                    document.getElementById('choferWarning').style.display = 'none';
+                    select.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error cargando choferes:', error);
+                const select = document.getElementById('choferSelect');
+                select.innerHTML = '<option value="">❌ Error al cargar choferes</option>';
+            }
+        }
+
+        async function createRoute(event) {
+            event.preventDefault();
+            
+            const routeData = {
+                chofer_id: parseInt(document.getElementById('choferSelect').value),
+                origen: document.getElementById('routeOrigen').value,
+                destino: document.getElementById('routeDestino').value,
+                descripcion: document.getElementById('routeDescripcion').value,
+                distancia_km: parseFloat(document.getElementById('routeDistancia').value)
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/routes/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(routeData)
+                });
+
+                const messageDiv = document.getElementById('routeMessage');
+                
+                if (response.ok) {
+                    messageDiv.className = 'alert alert-success show';
+                    messageDiv.textContent = '✓ Ruta creada exitosamente';
+                    event.target.reset();
+                    setTimeout(() => {
+                        messageDiv.classList.remove('show');
+                        loadRoutes();
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    messageDiv.className = 'alert alert-error show';
+                    messageDiv.textContent = '✗ ' + (error.detail || 'Error al crear ruta');
+                }
+            } catch (error) {
+                document.getElementById('routeMessage').className = 'alert alert-error show';
+                document.getElementById('routeMessage').textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        async function updateRouteStatus(rutaId, nuevoEstado) {
+            try {
+                const response = await fetch(`${API_URL}/routes/${rutaId}/status?estado=${nuevoEstado}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    loadRoutes();
+                    const role = String(user.role || '').toUpperCase();
+                    if (role.includes('GERENTE') || role.includes('DISPATCHER')) {
+                        loadStats();
+                    }
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'No se pudo actualizar el estado'));
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+
+        async function deleteRoute(rutaId) {
+            if (!confirm('¿Estás seguro de eliminar esta ruta?')) return;
+            try {
+                const response = await fetch(`${API_URL}/routes/${rutaId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    loadRoutes();
+                    loadStats();
+                }
+            } catch (error) { alert('Error al eliminar'); }
+        }
+
+        // USUARIOS
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/users/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await response.json();
+                
+                if (!Array.isArray(users) || users.length === 0) {
+                    document.getElementById('usersContent').innerHTML = '<p>No hay usuarios</p>';
+                    return;
+                }
+                
+                let html = '<table class="users-table"><thead><tr><th>ID</th><th>Email</th><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+                users.forEach(u => {
+                    const deleteBtn = u.id !== user.id ? `<button class="btn-small" onclick="deleteUser(${u.id})" style="padding: 5px 10px; font-size: 0.8rem; background: var(--error);">🗑️ Desactivar</button>` : '-';
+                    html += `<tr>
+                        <td>#${u.id}</td>
+                        <td>${u.email}</td>
+                        <td>${u.username}</td>
+                        <td>${u.full_name}</td>
+                        <td><span class="status-badge" style="background: var(--light-blue); color: white;">${u.role}</span></td>
+                        <td>${u.is_active ? '✓ Activo' : '✗ Inactivo'}</td>
+                        <td>${deleteBtn}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('usersContent').innerHTML = html;
+            } catch (error) {
+                document.getElementById('usersContent').textContent = 'Error al cargar usuarios';
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('¿Estás seguro de desactivar este usuario?')) return;
+            try {
+                const response = await fetch(`${API_URL}/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) { loadUsers(); loadStats(); }
+            } catch (error) { alert('Error al procesar'); }
+        }
+
+        async function createUser(event) {
+            event.preventDefault();
+            
+            const userData = {
+                email: document.getElementById('userEmail').value,
+                username: document.getElementById('userUsername').value,
+                full_name: document.getElementById('userFullName').value,
+                password: document.getElementById('userPassword').value,
+                role: document.getElementById('userRole').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/users/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const messageDiv = document.getElementById('userMessage');
+                
+                if (response.ok) {
+                    messageDiv.className = 'alert alert-success show';
+                    messageDiv.textContent = '✓ Usuario creado exitosamente';
+                    event.target.reset();
+                    setTimeout(() => {
+                        messageDiv.classList.remove('show');
+                        loadUsers();
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    messageDiv.className = 'alert alert-error show';
+                    messageDiv.textContent = '✗ ' + (error.detail || 'Error al crear usuario');
+                }
+            } catch (error) {
+                document.getElementById('userMessage').className = 'alert alert-error show';
+                document.getElementById('userMessage').textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        // CÓDIGOS TEMPORALES
+        async function generateCode(event) {
+            event.preventDefault();
+            
+            const codeData = {
+                purpose: document.getElementById('codePurpose').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/auth/generate-code`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(codeData)
+                });
+
+                const messageDiv = document.getElementById('codeMessage');
+                const codeDisplay = document.getElementById('codeDisplay');
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    messageDiv.className = 'alert alert-success show';
+                    messageDiv.textContent = '✓ Código generado exitosamente';
+                    codeDisplay.textContent = result.code;
+                    codeDisplay.classList.remove('hidden');
+                    event.target.reset();
+                    setTimeout(() => {
+                        loadCodes();
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    messageDiv.className = 'alert alert-error show';
+                    messageDiv.textContent = '✗ ' + (error.detail || 'Error al generar código');
+                    codeDisplay.classList.add('hidden');
+                }
+            } catch (error) {
+                document.getElementById('codeMessage').className = 'alert alert-error show';
+                document.getElementById('codeMessage').textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        async function loadCodes() {
+            try {
+                const response = await fetch(`${API_URL}/gerente/codes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar códigos');
+                }
+
+                const codes = await response.json();
+                
+                if (!Array.isArray(codes) || codes.length === 0) {
+                    document.getElementById('codesContent').innerHTML = '<p style="text-align: center; color: #9ca3af;">📭 No hay códigos generados aún. Crea uno con el formulario arriba.</p>';
+                    return;
+                }
+                
+                let html = '<table class="routes-table"><thead><tr><th>Código</th><th>Propósito</th><th>Estado</th><th>Expira</th></tr></thead><tbody>';
+                codes.forEach(c => {
+                    const used = c.is_used ? '<span class="status-badge" style="background: #ef4444; color: white;">Usado</span>' : '<span class="status-badge" style="background: #22c55e; color: white;">✓ Activo</span>';
+                    const expireDate = new Date(c.expires_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const expireTime = new Date(c.expires_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    html += `<tr>
+                        <td><strong style="font-size: 1.4rem; color: var(--turquoise);">${c.code}</strong></td>
+                        <td>${c.purpose}</td>
+                        <td>${used}</td>
+                        <td>${expireDate} ${expireTime}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('codesContent').innerHTML = html;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('codesContent').innerHTML = '<p style="text-align: center; color: #9ca3af;">📭 No hay códigos disponibles</p>';
+            }
+        }
+
+        // ESTADÍSTICAS
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/gerente/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar estadísticas');
+                }
+
+                const stats = await response.json();
+                
+                document.getElementById('statsContent').innerHTML = `
+                    <div class="cards-grid">
+                        <div class="card" style="border-left: 4px solid var(--turquoise);">
+                            <div class="data-item"><strong>👤 Choferes:</strong> <span style="font-size: 1.3rem; color: var(--turquoise);">${stats.total_choferes}</span></div>
+                            <div class="data-item"><strong>📋 Dispatchers:</strong> <span style="font-size: 1.3rem; color: var(--turquoise);">${stats.total_dispatchers}</span></div>
+                        </div>
+                        <div class="card" style="border-left: 4px solid var(--light-blue);">
+                            <div class="data-item"><strong>🚚 Total Rutas:</strong> <span style="font-size: 1.3rem; color: var(--light-blue);">${stats.total_rutas}</span></div>
+                            <div class="data-item"><strong>⏳ Rutas Activas:</strong> <span style="font-size: 1.3rem; color: #fbbf24;">${stats.rutas_activas}</span></div>
+                            <div class="data-item"><strong>✓ Rutas Completadas:</strong> <span style="font-size: 1.3rem; color: #22c55e;">${stats.rutas_completadas}</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('statsContent').innerHTML = '<p style="text-align: center; color: #9ca3af;">📊 Las estadísticas aparecerán una vez que haya datos</p>';
+            }
+        }
+        
+        async function loadSensitiveData() {
+            try {
+                const response = await fetch(`${API_URL}/gerente/sensitive-data`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar datos sensibles');
+                }
+
+                const data = await response.json();
+                
+                document.getElementById('sensitiveContent').innerHTML = `
+                    <div class="data-item sensitive-data">
+                        <strong>💰 Costo Real:</strong> $${data.costo_real}<br>
+                        <strong>📈 Margen de Ganancia:</strong> ${data.margen_ganancia}%<br>
+                        <strong>⭐ Clientes VIP:</strong> ${data.clientes_vip.join(', ')}<br>
+                        <strong>⛽ Combustible Extra:</strong> ${data.combustible_extra_en_ruta ? 'Sí ✓' : 'No'}<br>
+                        <strong>📝 Notas:</strong> ${data.notas_confidenciales}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('sensitiveContent').innerHTML = '<p style="color: var(--error);">⚠️ Error al cargar datos confidenciales</p>';
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>

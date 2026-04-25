@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiSecure - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--white);
+        }
+        
+        .login-split {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        .login-form-side {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--light-blue) 0%, var(--light-turquoise) 100%);
+            padding: 20px;
+        }
+        
+        .login-carousel-side {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .carousel-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            animation: crossfade 15s infinite;
+        }
+        
+        .carousel-item:nth-child(1) { animation-delay: 0s; }
+        .carousel-item:nth-child(2) { animation-delay: 5s; }
+        .carousel-item:nth-child(3) { animation-delay: 10s; }
+        
+        @keyframes crossfade {
+            0% { opacity: 0; transform: scale(1.05); }
+            10% { opacity: 1; transform: scale(1); }
+            33% { opacity: 1; transform: scale(1); }
+            43% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; }
+        }
+        
+        @media (max-width: 900px) {
+            .login-carousel-side {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-split">
+        <div class="login-form-side">
+            <div class="container">
+        <div class="header">
+            <h1>🚚 LogiSecure</h1>
+            <p>Sistema de Gestión Logística</p>
+        </div>
+        
+        <div class="content">
+            <div id="alert" class="alert hidden"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+
+                <div class="form-group" id="totpGroup" style="display:none;">
+                    <label for="totp">Código 2FA (Google Authenticator)</label>
+                    <input type="text" id="totp" name="totp" placeholder="123456" maxlength="6">
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">Iniciar Sesión</button>
+            </form>
+            
+            <div class="divider">o</div>
+            
+            <button class="btn btn-google" id="googleBtn" type="button">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google Logo">
+                Continuar con Google
+            </button>
+            
+            <div class="link">
+                <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+            </div>
+        </div>
+    </div>
+        </div>
+        <div class="login-carousel-side">
+            <img src="{{ url_for('static', path='bg-carousel-1.png') }}" class="carousel-item" alt="Logistics Flow 1">
+            <img src="{{ url_for('static', path='bg-carousel-2.png') }}" class="carousel-item" alt="Logistics Warehouse">
+            <img src="{{ url_for('static', path='bg-carousel-3.png') }}" class="carousel-item" alt="Global Network">
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const alert = document.getElementById('alert');
+            
+            btn.disabled = true;
+            btn.textContent = 'Iniciando...';
+            
+            const data = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+            
+            const totpVal = document.getElementById('totp').value;
+            if (totpVal) {
+                data.totp_code = totpVal;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', result.access_token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    if (result.user && !result.user.is_totp_enabled) {
+                        window.location.href = '/setup-2fa';
+                    } else {
+                        window.location.href = '/dashboard';
+                    }
+                } else {
+                    if (result.detail === 'Código 2FA requerido') {
+                        document.getElementById('totpGroup').style.display = 'block';
+                        document.getElementById('totp').required = true;
+                        document.getElementById('totp').focus();
+                        alert.innerHTML = '<strong>🔐 2FA Activado</strong><br>Por favor ingresa el código de 6 dígitos de tu Google Authenticator';
+                        alert.className = 'alert alert-error';
+                        alert.classList.remove('hidden');
+                    } else if (result.detail === 'Código 2FA inválido') {
+                        alert.textContent = '❌ Código 2FA incorrecto. Verifica que ingresaste el código correcto de Google Authenticator';
+                        alert.className = 'alert alert-error';
+                        alert.classList.remove('hidden');
+                        document.getElementById('totp').value = '';
+                        document.getElementById('totp').focus();
+                    } else {
+                        alert.textContent = result.detail || 'Error al iniciar sesión';
+                        alert.className = 'alert alert-error';
+                        alert.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                alert.textContent = 'Error de conexión';
+                alert.className = 'alert alert-error';
+                alert.classList.remove('hidden');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Iniciar Sesión';
+        });
+        
+        if (localStorage.getItem('token')) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user && !user.is_totp_enabled) {
+                window.location.href = '/setup-2fa';
+            } else {
+                window.location.href = '/dashboard';
+            }
+        }
+        
+        // Lógica para Google Login
+        document.getElementById('googleBtn').addEventListener('click', () => {
+            // Aquí se integraría el SDK de Google Identity Services (GSI)
+            // Una vez obtenido el token de Google, se enviaría al backend:
+            // fetch(`${API_URL}/auth/google`, { method: 'POST', body: JSON.stringify({ token: '...' }) })
+            console.log('Botón de Google clickeado. Requiere inicializar el SDK de Google.');
+            alert('Esta es la interfaz funcional. Para que Google inicie sesión, debes agregar el Client ID proporcionado por Google Cloud Console en el archivo .env e inicializar el script de Google (GSI). ¡El backend (google_auth.py) ya está listo para recibir el token!');
+        });
+    </script>
+</body>
+</html>
