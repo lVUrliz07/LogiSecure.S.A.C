@@ -541,7 +541,8 @@
                 });
                 html += '</tbody></table>';
                 
-                if (user.role === 'CHOFER') {
+                const currentRole = String(user.role || '').toUpperCase();
+                if (currentRole.includes('CHOFER')) {
                     html = `<div class="card" style="margin-bottom: 20px; background: var(--primary-blue); color: white;">
                                 <h4 style="margin:0">📊 Mi Resumen: <span style="color: var(--turquoise)">${totalKmChofer.toFixed(1)} km</span> recorridos en total</h4>
                             </div>` + html;
@@ -568,8 +569,8 @@
                     return;
                 }
 
-                const users = await response.json();
-                const choferes = users.filter(u => u.role === 'CHOFER');
+                const usersList = await response.json();
+                const choferes = usersList.filter(u => String(u.role).toUpperCase().includes('CHOFER'));
                 
                 const select = document.getElementById('choferSelect');
                 select.innerHTML = '';
@@ -656,8 +657,8 @@
 
                 if (response.ok) {
                     loadRoutes();
-                    const role = String(user.role || '').toUpperCase();
-                    if (role.includes('GERENTE') || role.includes('DISPATCHER')) {
+                    const currentRole = String(user.role || '').toUpperCase();
+                    if (currentRole.includes('GERENTE') || currentRole.includes('DISPATCHER')) {
                         loadStats();
                     }
                 } else {

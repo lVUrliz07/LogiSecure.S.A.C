@@ -13,11 +13,11 @@ router = APIRouter(prefix="/users", tags=["Usuarios"])
 
 @router.get("/", response_model=List[UserResponse])
 async def get_all_users(
-    current_user: User = Depends(get_gerente_user),
+    current_user: User = Depends(get_dispatcher_or_gerente_user),
     db: Session = Depends(get_db),
 ):
     """
-    Obtiene todos los usuarios. Solo el gerente puede acceder.
+    Obtiene todos los usuarios. El gerente y el despachador pueden acceder para gestionar la flota.
     """
     users = db.query(User).all()
     return [UserResponse.model_validate(user) for user in users]
