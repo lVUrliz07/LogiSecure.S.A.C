@@ -22,6 +22,24 @@ The platform is built on a robust set of technologies to ensure scalability, sec
 
 ---
 
+## API Documentation
+
+The system features a fully documented RESTful API accessible via Swagger UI. This documentation provides a clear overview of the available endpoints, their expected parameters, and response schemas.
+
+### 1. Authentication and Authorization
+![Swagger Auth Documentation](/docs/swagger_auth.png)
+*Centralized authentication endpoints including registration, login, and MFA (TOTP) management.*
+
+### 2. Fleet and Route Management
+![Swagger Management Documentation](/docs/swagger_management.png)
+*Administrative endpoints for user control and real-time route assignment/tracking.*
+
+### 3. System Schemas and Sensitive Data
+![Swagger System Documentation](/docs/swagger_system.png)
+*Detailed response models and protected endpoints for administrative financial statistics.*
+
+---
+
 ## Security Implementation
 
 The system implements a centralized security model that enforces permissions at the endpoint level.
@@ -36,28 +54,6 @@ The system enforces strict boundaries between different user roles:
 - **Gerente (Manager):** Full administrative access, user management, and access to encrypted sensitive financial data.
 - **Coordinador (Dispatcher):** Management of delivery routes, fleet status monitoring, and access to general system statistics.
 - **Chofer (Driver):** Access to assigned individual routes, real-time status updates, and personalized mileage summaries.
-
----
-
-## System Overview (Screenshots)
-
-Below are the primary interfaces of the LogiSecure system for portfolio visualization.
-
-### [User Authentication Interface]
-![Authentication Page placeholder](/path/to/auth_screenshot.png)
-*Professional login interface featuring secondary TOTP verification.*
-
-### [Administrative Dashboard]
-![Manager Dashboard placeholder](/path/to/manager_dashboard.png)
-*Centralized management view for Gerente role showing users and route control.*
-
-### [Fleet Management and Statistics]
-![Dispatcher Statistics placeholder](/path/to/dispatcher_stats.png)
-*Fleet statistics and route assignment interface for Coordinador role.*
-
-### [Driver Operation Panel]
-![Driver View placeholder](/path/to/driver_dashboard.png)
-*Optimized interface for drivers to track and update route progress.*
 
 ---
 
@@ -91,14 +87,14 @@ python -m app.main
 
 ## Functionality Matrix
 
-| Module | Gerente | Coordinador | Chofer |
-| :--- | :---: | :---: | :---: |
-| User Administration | Supported | Restrict | Restrict |
-| Route Assignment | Supported | Supported | Restrict |
-| Operational Statistics | Supported | Supported | Restrict |
-| Financial Sensitive Data | Supported | Restrict | Restrict |
-| Route Status Updates | Supported | Supported | Supported |
-| Personal Performance | Supported | Supported | Supported |
+| Module                            | Gerente | Coordinador | Chofer |
+| :-------------------------------- | :----: | :---------: | :-----: |
+| User Administration               | Supported | Restricted  | Restricted |
+| Route Assignment                  | Supported | Supported   | Restricted |
+| Operational Statistics            | Supported | Supported   | Restricted |
+| Financial Sensitive Data          | Supported | Restricted  | Restricted |
+| Route Status Updates              | Supported | Supported   | Supported |
+| Personal Performance              | Supported | Supported   | Supported |
 
 ---
 *LogiSecure System Documentation - Version 1.1.0*
